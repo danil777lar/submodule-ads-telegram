@@ -43,12 +43,12 @@ public class TelegramAdsService : Service, IAdsService
 #endif  
     }
     
-    public void ShowInterstitial(bool first = false)
+    public void ShowInterstitial(int interIndex = 0)
     {
-        string adKey = first ? INTER_FIRST : INTER_DEFAULT;
+        string adKey = interIndex == 0 ? INTER_DEFAULT : INTER_FIRST;
         _adFeedbacks.Add((result) =>
         {
-            TelegramBridge.Instance.ShowTelegramAlert(result);
+            //TelegramBridge.Instance.ShowTelegramAlert(result);
         });
         
 #if UNITY_WEBGL && !UNITY_EDITOR
