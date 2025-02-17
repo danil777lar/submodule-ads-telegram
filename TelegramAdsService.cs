@@ -13,23 +13,29 @@ public class TelegramAdsService : Service, IAdsService
     private const string INTER_FIRST = "interstitial_first";
     private const string INTER_DEFAULT = "interstitial_default";
     private const string REWARDED = "rewarded";
-    
+
+    [SerializeField] private bool useAds;
+    [Space]
     [SerializeField] private string interFirstId;
     [SerializeField] private string interDefaultId;
     [SerializeField] private string rewardedId;
+    [Space] 
+    [SerializeField] private float interDelay = 30;
+    [SerializeField] private bool debugMode;
     
 #if UNITY_WEBGL && !UNITY_EDITOR
-    [DllImport("__Internal")] private static extern void InitBlockJs(string key, string id);
+    [DllImport("__Internal")] private static extern void InitBlockJs(string key, string id, int debugMode);
     [DllImport("__Internal")] private static extern void ShowBlockJs(string key, int id, string goName, string callbackName);
 #endif
 
+    private float _interDelay = -1f;
     private List<Action<string>> _adFeedbacks = new List<Action<string>>();
     
-    public bool Initialized { get; }
-    public bool InterstitialAdAvailable { get; }
-    public bool RewardedAdAvailable { get; }
-    public bool BannerShowing { get; }
-    public float BannerHeight { get; }
+    public bool Initialized { get; private set; }
+    public bool InterstitialAdAvailable { get; private set; }
+    public bool RewardedAdAvailable { get; private set; }
+    public bool BannerShowing { get; private set; }
+    public float BannerHeight { get; private set; }
     
     public event Action EventBannerShown;
     public event Action EventBannerHidden;
@@ -37,27 +43,55 @@ public class TelegramAdsService : Service, IAdsService
     public override void Init()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        InitBlockJs(INTER_FIRST, interFirstId);
-        InitBlockJs(INTER_DEFAULT, interDefaultId);
-        InitBlockJs(REWARDED, rewardedId);
-#endif  
+        if (!string.IsNullOrEmpty(interFirstId)) 
+        {
+            InitBlockJs(INTER_FIRST, interFirstId, debugMode ? 1 : 0);
+            InterstitialAdAvailable = true;
+        }
+
+        if (!string.IsNullOrEmpty(interDefaultId)) 
+        {
+            InitBlockJs(INTER_DEFAULT, interDefaultId, debugMode ? 1 : 0);
+            InterstitialAdAvailable = true;
+        }
+
+        if (!string.IsNullOrEmpty(rewardedId)) 
+        {
+            InitBlockJs(REWARDED, rewardedId, debugMode ? 1 : 0);
+            RewardedAdAvailable = true;
+        }
+#endif
+        
+        Initialized = true;
     }
-    
+
     public void ShowInterstitial(int interIndex = 0)
     {
-        string adKey = interIndex == 0 ? INTER_DEFAULT : INTER_FIRST;
-        _adFeedbacks.Add((result) =>
+        if (!useAds)
         {
-            //TelegramBridge.Instance.ShowTelegramAlert(result);
-        });
-        
+            return;
+        }
+
+        if (_interDelay <= 0f)
+        {
+            _interDelay = interDelay;
+
+            string adKey = interIndex == 0 ? INTER_DEFAULT : INTER_FIRST;
+            _adFeedbacks.Add((result) => { });
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         ShowBlockJs(adKey, _adFeedbacks.Count - 1, gameObject.name, "CatchBlockFeedback");
-#endif  
+#endif
+        }
     }
 
     public void ShowRewarded(Action onAdShowStart, Action onAdShowClick, Action onAdShowComplete, Action onAdShowFailed)
     {
+        if (!useAds)
+        {
+            return;
+        }
+        
         string adKey = REWARDED;
         _adFeedbacks.Add((result) =>
         {
@@ -74,6 +108,14 @@ public class TelegramAdsService : Service, IAdsService
 #if UNITY_WEBGL && !UNITY_EDITOR
         ShowBlockJs(adKey, _adFeedbacks.Count - 1, gameObject.name, "CatchBlockFeedback");
 #endif  
+    }
+
+    private void Update()
+    {
+        if (_interDelay > 0f)
+        {
+            _interDelay -= Time.deltaTime;
+        }
     }
 
     private void CatchBlockFeedback(string data)

@@ -1,9 +1,9 @@
 mergeInto(LibraryManager.library,
     { 
-        InitBlockJs: function (key, id)
+        InitBlockJs: function (key, id, debugMode)
         {
-            keyString = UTF8ToString(key);
-            idString = UTF8ToString(id);
+            keyString = Pointer_stringify(key);
+            idString = Pointer_stringify(id);
 
             if (!window.adBlocks)
             {
@@ -13,7 +13,7 @@ mergeInto(LibraryManager.library,
             block = window.Adsgram.init(
             {
                 blockId: idString,
-                debug: true,
+                debug: (debugMode == 1),
                 debugBannerType: "FullscreenMedia"
             });
 
@@ -22,10 +22,10 @@ mergeInto(LibraryManager.library,
 
         ShowBlockJs: function (key, id, goName, callbackName)
         {
-            keyString = UTF8ToString(key);
-            idString = UTF8ToString(id);
-            goNameString = UTF8ToString(goName);
-            callbackNameString = UTF8ToString(callbackName);
+            keyString = Pointer_stringify(key);
+            idString = Pointer_stringify(id);
+            goNameString = Pointer_stringify(goName);
+            callbackNameString = Pointer_stringify(callbackName);
 
             block = window.adBlocks.get(keyString);
             if (block)
