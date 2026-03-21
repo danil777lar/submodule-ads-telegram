@@ -110,6 +110,11 @@ public class TelegramAdsService : Service, IAdsService
 #endif  
     }
 
+    public bool ShowAppOpenAd()
+    {
+        return true;
+    }
+
     private void Update()
     {
         if (_interDelay > 0f)
