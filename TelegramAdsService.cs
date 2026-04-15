@@ -28,6 +28,8 @@ public class TelegramAdsService : Service, IAdsService
     [DllImport("__Internal")] private static extern void ShowBlockJs(string key, int id, string goName, string callbackName);
 #endif
 
+    [InjectService] private IDataService _dataService;
+
     private float _interDelay = -1f;
     private List<Action<string>> _adFeedbacks = new List<Action<string>>();
     
@@ -65,9 +67,15 @@ public class TelegramAdsService : Service, IAdsService
         Initialized = true;
     }
 
+    public void SetActiveNoAdsMode(bool noAdsActive)
+    {
+        _dataService.GameData.NoAdsActive = noAdsActive;
+        _dataService.SaveGameData();
+    }
+
     public void ShowInterstitial(int interIndex = 0)
     {
-        if (!useAds)
+        if (!useAds || _dataService.GameData.NoAdsActive)
         {
             return;
         }
