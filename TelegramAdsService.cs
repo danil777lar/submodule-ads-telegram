@@ -41,7 +41,8 @@ public class TelegramAdsService : Service, IAdsService
     
     public event Action EventBannerShown;
     public event Action EventBannerHidden;
-    
+    public event Action<bool> EventNoAdsModeChanged;
+
     public override void Init()
     {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -71,6 +72,7 @@ public class TelegramAdsService : Service, IAdsService
     {
         _dataService.GameData.NoAdsActive = noAdsActive;
         _dataService.SaveGameData();
+        EventNoAdsModeChanged?.Invoke(noAdsActive);
     }
 
     public void ShowInterstitial(int interIndex = 0)
